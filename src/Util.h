@@ -4,7 +4,7 @@ namespace PAR::Util
 {
 	using SKSE::stl::enumeration;
 	using SKSE::stl::report_and_fail;
-	using SKSE::stl::to_underlying;
+	using std::to_underlying;
 
 	const char* ws = " \t\n\r\f\v";
 

@@ -83,7 +83,7 @@ namespace stl
 }
 
 namespace logger = SKSE::log;
-namespace WinAPI = SKSE::WinAPI;
+//namespace WinAPI = SKSE::WinAPI;
 
 namespace util
 {
@@ -103,7 +103,7 @@ using json = nlohmann::json;
 
 #include <magic_enum.hpp>
 
-#include "SimpleMath.h"
+//#include "SimpleMath.h"
 
 #include <srell.hpp>
 

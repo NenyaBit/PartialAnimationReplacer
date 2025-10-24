@@ -54,6 +54,14 @@ namespace PAR
 			}
 
 			_conditions = numConditions ? condition : nullptr;
+			
+			// Build boneset.
+			// To avoid looping over all frames, assume no frame contains other bones than the first frame.
+			// In the future, if elaborate multi-frame PAR replacements appear, you may want to change this.
+			for(const auto& override : _frames[0]) {
+				_boneset.insert(override.name);
+			}
+
 		}
 		inline ReplacerData GetData()
 		{
@@ -111,10 +119,12 @@ namespace PAR
 
 			return valid;
 		}
-		uint64_t GetPriority() { return _priority; }
+		uint64_t GetPriority() const { return _priority; }
+		const std::set<std::string>& GetBoneset() const { return _boneset; } 
 	private:
 		uint64_t _priority;
 		std::vector<std::vector<Override>> _frames;
+		std::set<std::string> _boneset;
 
 		bool _rotate;
 		bool _translate;

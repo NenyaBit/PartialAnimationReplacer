@@ -24,18 +24,39 @@ void ReplacerManager::EvaluateReplacers()
 	replacers = _current.exchange(replacers);
 }
 
+// Helper function to test for common bones
+// The point is: no std::string copy, linear time
+bool HaveCommonElements(
+    const BoneSet& set1,
+    const BoneSet& set2)
+{
+    auto it1 = set1.begin();
+    auto it2 = set2.begin();
+	// take advantage of std::sets being sorted structures
+    while (it1 != set1.end() && it2 != set2.end()) {
+        const std::string& s1 = it1->get();
+        const std::string& s2 = it2->get();
+        if (s1 == s2)
+            return true;
+        if (s1 < s2)
+            ++it1;
+        else
+            ++it2;
+    }
+    return false;
+}
+
 // Evaluates conditions on actor `a_actor` and inserts applicable replacers in `a_map`
 void ReplacerManager::FindReplacersForActor(RE::Actor* a_actor, ReplacerMap& a_map)
 {
-	std::set<std::string> replaced_bones;
+	// logger::info("FindReplacersForActor on actor {:x} ({} candidates)", a_actor->formID, _replacers.size());
+	BoneSet replaced_bones;
 	// replacers are already sorted by decreasing priority
 	for (const auto& replacer : _replacers) {
 		if (replacer->Eval(a_actor)) {
 			// test for no shared bones
-			const std::set<std::string>& incoming_bones = replacer->GetBoneset();
-			std::vector<std::string> common_bones;
-			std::set_intersection(replaced_bones.begin(), replaced_bones.end(), incoming_bones.begin(), incoming_bones.end(), std::back_inserter(common_bones)); 
-			if (common_bones.empty()) {
+			const BoneSet& incoming_bones = replacer->GetBoneset();
+			if (not HaveCommonElements(replaced_bones, incoming_bones)) {
 				a_map[a_actor->GetFormID()].push_back(replacer);
 				replaced_bones.insert(incoming_bones.begin(), incoming_bones.end());
 			}

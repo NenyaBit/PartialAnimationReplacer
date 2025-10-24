@@ -11,6 +11,7 @@ namespace PAR
 	};
 
 	typedef std::vector<Override> Frame;
+	typedef std::set<std::reference_wrapper<const std::string>, std::less<std::string>> BoneSet;
 
 	struct ReplacerData
 	{
@@ -120,11 +121,11 @@ namespace PAR
 			return valid;
 		}
 		uint64_t GetPriority() const { return _priority; }
-		const std::set<std::string>& GetBoneset() const { return _boneset; } 
+		const BoneSet& GetBoneset() const { return _boneset; } 
 	private:
 		uint64_t _priority;
 		std::vector<std::vector<Override>> _frames;
-		std::set<std::string> _boneset;
+		BoneSet _boneset; // set of bones overriden by this replacer.
 
 		bool _rotate;
 		bool _translate;

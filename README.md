@@ -33,8 +33,8 @@ Allows runtime patching of animations through raw node manipulation.
 Open terminal (e.g., PowerShell) and run the following commands:
 
 ```
-git clone https://github.com/ponzipyramid/NodeManipulator.git --recursive
-cd CommonLibSSE-NG-Template
+git clone https://github.com/IHateMyKite/PartialAnimationReplacer.git --recursive
+cd PartialAnimationReplacer
 .\BuildRelease.bat
 ```
 

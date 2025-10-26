@@ -13,7 +13,7 @@ namespace PAR
 	typedef std::vector<Override> Frame;
 	typedef std::set<std::reference_wrapper<const std::string>, std::less<std::string>> BoneSet;
 
-	struct Clamp
+	struct Limit
 	{
 		std::string name;
 		std::array<float, 3> rotate_low;   // Euler angles
@@ -28,7 +28,7 @@ namespace PAR
 	{
 		uint64_t priority;
 		std::vector<Frame> frames;
-		std::vector<Clamp> clamps;
+		std::vector<Limit> limits;
 
 		bool rotate;
 		bool translate;
@@ -42,7 +42,7 @@ namespace PAR
 	{
 	public:
 		Replacer(const ReplacerData& a_raw) :
-			_priority(a_raw.priority), _frames(a_raw.frames), _clamps(a_raw.clamps), _rotate(a_raw.rotate), _translate(a_raw.translate), _scale(a_raw.scale)
+			_priority(a_raw.priority), _frames(a_raw.frames), _limits(a_raw.limits), _rotate(a_raw.rotate), _translate(a_raw.translate), _scale(a_raw.scale)
 		{
 			for (const auto& [key, ref] : a_raw.refs) {
 				_refs[key] = Util::GetFormFromString(ref);
@@ -76,13 +76,13 @@ namespace PAR
 					_boneset.insert(override.name);
 				}
 			}
-			for (const auto& clamp : _clamps) {
-				_boneset.insert(clamp.name);
+			for (const auto& lim : _limits) {
+				_boneset.insert(lim.name);
 			}
 		}
 		inline ReplacerData GetData()
 		{
-			return ReplacerData{ _priority, _frames, _clamps, _rotate, _translate, _scale };
+			return ReplacerData{ _priority, _frames, _limits, _rotate, _translate, _scale };
 		}
 
 		// Within 3% error of tanh if -4 < x < 4. Overshoots slightly beyond that!
@@ -121,24 +121,24 @@ namespace PAR
 					}
 				}
 			}
-			// Apply clamps
-			for (const auto& clamp : _clamps) {
-				if (const auto node = a_obj->GetObjectByName(clamp.name)) {
+			// Apply limits
+			for (const auto& lim : _limits) {
+				if (const auto node = a_obj->GetObjectByName(lim.name)) {
 					if (_rotate) {
 						RE::NiPoint3 eulers;
 						node->local.rotate.ToEulerAnglesXYZ(eulers);
 						for (int i = 0; i < 3; ++i) {
-							eulers[i] = Saturate(eulers[i], clamp.rotate_low[i], clamp.rotate_high[i]);
+							eulers[i] = Saturate(eulers[i], lim.rotate_low[i], lim.rotate_high[i]);
 							node->local.rotate.SetEulerAnglesXYZ(-eulers.x, eulers.y, -eulers.z);
 						}
 					}
 					if (_translate) {
 						for (int i = 0; i < 3; ++i) {
-							node->local.translate[i] = Saturate(node->local.translate[i], clamp.translate_low[i], clamp.translate_high[i]);
+							node->local.translate[i] = Saturate(node->local.translate[i], lim.translate_low[i], lim.translate_high[i]);
 						}
 					}
 					if (_scale) {
-						node->local.scale = Saturate(node->local.scale, clamp.scale_low, clamp.scale_high);
+						node->local.scale = Saturate(node->local.scale, lim.scale_low, lim.scale_high);
 					}
 				}
 			}
@@ -156,8 +156,8 @@ namespace PAR
 				logger::error("{}: must have conditions", a_file);
 			}
 
-			if (_frames.empty() and _clamps.empty()) {
-				logger::error("{}: no frames nor clamps found", a_file);
+			if (_frames.empty() and _limits.empty()) {
+				logger::error("{}: no frames nor limits found", a_file);
 				valid = false;
 			}
 
@@ -175,9 +175,9 @@ namespace PAR
 					}
 				}
 			}
-			for (const auto& clamp : _clamps) {
-				if (clamp.name.empty()) {
-					logger::error("{}: clamp with no node found", a_file);
+			for (const auto& lim : _limits) {
+				if (lim.name.empty()) {
+					logger::error("{}: lim with no node found", a_file);
 					valid = false;
 					break;
 				}
@@ -191,7 +191,7 @@ namespace PAR
 	private:
 		uint64_t _priority;
 		std::vector<std::vector<Override>> _frames;
-		std::vector<Clamp> _clamps;
+		std::vector<Limit> _limits;
 
 		bool _rotate;
 		bool _translate;
@@ -206,7 +206,7 @@ namespace PAR
 	{
 		o.name = j.value("name", "");
 
-		// TODO: make the fields in frame optional. This will crash if rotate is not provided. 
+		// TODO: make the fields in frame optional. This will crash if rotate is not provided.
 		// const std::vector<std::vector<float>> Identity{{1.f, 0.f, 0.f}, {0.f, 1.f, 0.f}, {0.f, 0.f, 1.f}};
 		// const auto val = j.value("rotate", Identity);
 		const auto val = j.value("rotate", std::vector<std::vector<float>>{});
@@ -241,7 +241,7 @@ namespace PAR
 		};
 	}
 
-	inline void from_json(const json& j, Clamp& c)
+	inline void from_json(const json& j, Limit& c)
 	{
 		constexpr std::array<float, 3> zeros = std::array<float, 3>{ 0.f, 0.f, 0.f };
 		c.name = j.value("name", "");
@@ -258,7 +258,7 @@ namespace PAR
 		}
 	}
 
-	inline void to_json(json& j, const Clamp& c)
+	inline void to_json(json& j, const Limit& c)
 	{
 		// convert degrees to radians
 		std::array<float, 3> rotate_low_deg;
@@ -283,7 +283,7 @@ namespace PAR
 	{
 		r.priority = j.value("priority", 0);
 		r.frames = j.value("frames", std::vector<Frame>{});
-		r.clamps = j.value("clamps", std::vector<Clamp>{});
+		r.limits = j.value("limits", std::vector<Limit>{});
 		r.conditions = j.value("conditions", std::vector<std::string>{});
 		r.refs = j.value("refs", std::unordered_map<std::string, std::string>{});
 		r.rotate = j.value("rotate", true);
@@ -301,7 +301,7 @@ namespace PAR
 			{ "scale", r.scale },
 			{ "refs", r.refs },
 			{ "frames", r.frames },
-			{ "clamps", r.clamps }
+			{ "limits", r.limits }
 		};
 	}
 }

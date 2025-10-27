@@ -8,8 +8,17 @@
         "plugin": {
             "description": "Build the SKSE plugin.",
             "dependencies": [
-                "commonlibsse-ng"
-            ]
+                "fmt",
+                "directxtk",
+                "rapidcsv",
+                "spdlog",
+                "xbyak",
+                "catch2",
+                "magic-enum",
+                "nlohmann-json",
+                "clib-util",
+                "srell"
+              ],
         },
         "tests": {
             "description": "Build tests for the SKSE plugin.",

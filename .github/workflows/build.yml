@@ -28,13 +28,12 @@ jobs:
       uses: lukka/run-cmake@v10
       with:
         cmakeListsTxtPath: '${{ github.workspace }}/CMakeLists.txt'
-        configurePreset: build-release-msvc
+        configurePreset: ALL
         configurePresetAdditionalArgs: "['-DCMAKE_TOOLCHAIN_FILE:STRING=C:/vcpkg/scripts/buildsystems/vcpkg.cmake']"
-        buildPreset: release-msvc
 
     - name: Move binaries
       run: |
-        cd ${{github.workspace}}/build/release-msvc
+        cd ${{github.workspace}}/build/ALL
         mkdir temp
         cd temp
         move ../PartialAnimationReplacer.dll
@@ -46,7 +45,7 @@ jobs:
         # Artifact name
         name: ${{ env.PROJECT_NAME }}-DLL
         # A file, directory or wildcard pattern that describes what to upload
-        path: build/release-msvc/temp
+        path: build/ALL/temp
         # The desired behavior if no files are found using the provided path.
         retention-days: 90
         

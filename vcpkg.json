@@ -9,7 +9,6 @@
             "description": "Build the SKSE plugin.",
             "dependencies": [
                 "fmt",
-                "directxtk",
                 "rapidcsv",
                 "spdlog",
                 "xbyak",

@@ -1,19 +1,34 @@
 {
-  "name": "sampleplugin",
-  "version-semver": "0.7.4",
-  "description": "",
-  "license": "GPL-3.0",
-  "dependencies": [
-    "fmt",
-    "directxtk",
-    "rapidcsv",
-    "spdlog",
-    "xbyak",
-    "catch2",
-    "magic-enum",
-    "nlohmann-json",
-    "clib-util",
-    "srell"
-  ],
-  "builtin-baseline": "83972272512ce4ede5fc3b2ba98f6468b179f192"
+    "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+    "name": "commonlibsse-sample-plugin",
+    "description": "Sample SKSE plugin based on CommonLibSSE, for unified AE/SE/VR deployment.",
+    "homepage": "https://www.skyrimng.com",
+    "license": "Apache-2.0",
+    "features": {
+        "plugin": {
+            "description": "Build the SKSE plugin.",
+            "dependencies": [
+                "commonlibsse-ng"
+            ]
+        },
+        "tests": {
+            "description": "Build tests for the SKSE plugin.",
+            "dependencies": [
+                {
+                    "name": "commonlibsse-sample-plugin",
+                    "default-features": false,
+                    "features": [
+                        "plugin"
+                    ]
+                }
+            ]
+        }
+    },
+    "overrides": [
+    ],
+    "builtin-baseline": "8cbab05e499a6fc3893c9a6125d51b6d7d877dcc",
+    "default-features": [
+        "plugin",
+        "tests"
+    ]
 }

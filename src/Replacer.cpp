@@ -50,6 +50,42 @@ namespace PAR
 		return ReplacerData{ _priority, _frames, _limits, _rotate, _translate, _scale };
 	}
 
+	
+void RotToAnglesZXY(const RE::NiMatrix3& Rot, float& x, float& y, float& z)
+{
+	auto& R = Rot.entry;
+	x = std::asin(R[2][1]);
+
+	float cx = std::cos(x);
+
+	if (std::abs(cx) > 1e-6f) {
+		z = RE::NiFastATan2(-R[0][1] / cx, R[1][1] / cx);
+		y = RE::NiFastATan2(-R[2][0] / cx, R[2][2] / cx);
+	} else {
+		z = 0.0f;  // arbitrary
+		y = RE::NiFastATan2(R[0][2], R[0][0]);
+	}
+}
+
+void RotFromAnglesZXY(RE::NiMatrix3& Rot, float x, float y, float z)
+{
+	auto& R = Rot.entry;
+	float cz = std::cos(z), sz = std::sin(z);
+	float cx = std::cos(x), sx = std::sin(x);
+	float cy = std::cos(y), sy = std::sin(y);
+
+	R[0][0] = cz * cy - sz * sx * sy;
+	R[0][1] = -sz * cx;
+	R[0][2] = cz * sy + sz * sx * cy;
+	R[1][0] = sz * cy + cz * sx * sy;
+	R[1][1] = cz * cx;
+	R[1][2] = sz * sy - cz * sx * cy;
+	R[2][0] = -cx * sy;
+	R[2][1] = sx;
+	R[2][2] = cx * cy;
+}
+
+
 	float Replacer::FastTanh(float x)
 	{
 		const float x2 = x * x;
@@ -89,11 +125,17 @@ namespace PAR
 			if (const auto node = a_obj->GetObjectByName(lim.name)) {
 				if (_rotate) {
 					RE::NiPoint3 eulers;
-					node->local.rotate.ToEulerAnglesXYZ(eulers);
+					RotToAnglesZXY(node->local.rotate, eulers.x, eulers.y, eulers.z);
+					// node->local.rotate.ToEulerAnglesXYZ(eulers);
+					logger::info("{}: {:2.1f}/{:2.1f}  {:2.1f}/{:2.1f} {:2.1f}/{:2.1f}", lim.name, RE::rad_to_deg(lim.rotate_low[0]), RE::rad_to_deg(lim.rotate_high[0]), RE::rad_to_deg(lim.rotate_low[1]), RE::rad_to_deg(lim.rotate_high[1]), RE::rad_to_deg(lim.rotate_low[2]), RE::rad_to_deg(lim.rotate_high[2]));
+					logger::info("\tEulers before: {:2.1f} {:2.1f} {:2.1f}", RE::rad_to_deg(eulers.x), RE::rad_to_deg(eulers.y), RE::rad_to_deg(eulers.z));
 					for (int i = 0; i < 3; ++i) {
 						eulers[i] = Saturate(eulers[i], lim.rotate_low[i], lim.rotate_high[i]);
-						node->local.rotate.SetEulerAnglesXYZ(-eulers.x, eulers.y, -eulers.z);
+						// node->local.rotate.SetEulerAnglesXYZ(-eulers.x, eulers.y, -eulers.z);  // SetEuler / ToEuler are inconsistent about x,z signs
+						RotFromAnglesZXY(node->local.rotate, eulers.x, eulers.y, eulers.z);
 					}
+					node->local.rotate.ToEulerAnglesXYZ(eulers);
+					logger::info("\tEulers after: {:2.1f} {:2.1f} {:2.1f}", RE::rad_to_deg(eulers.x), RE::rad_to_deg(eulers.y), RE::rad_to_deg(eulers.z));
 				}
 				if (_translate) {
 					for (int i = 0; i < 3; ++i) {

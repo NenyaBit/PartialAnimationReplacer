@@ -1,8 +1,8 @@
 {
-  "name": "sampleplugin",
-  "version-semver": "0.7.4",
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
+  "name": "partialanimationreplacer",
+  "version-string": "0.2.0",
   "description": "",
-  "license": "GPL-3.0",
   "dependencies": [
     "fmt",
     "directxtk",

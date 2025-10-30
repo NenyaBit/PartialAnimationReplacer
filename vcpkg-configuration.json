@@ -1,17 +1,17 @@
 {
-  "default-registry": {
-    "kind": "git",
-    "repository": "https://github.com/microsoft/vcpkg",
-    "baseline": "e37750923414078f32c2bb291dd76260b72afe69"
-  },
-  "registries": [
-    {
-      "kind": "git",
-      "repository": "https://gitlab.com/colorglass/vcpkg-colorglass",
-      "baseline": "70edd3a6927bb508e8fa06f55c750a86e407a065",
-      "packages": [
-        "commonlibsse-ng"
-      ]
-    }
-  ]
+    "default-registry": {
+        "kind": "git",
+        "repository": "https://github.com/microsoft/vcpkg.git",
+        "baseline": "fc6345e114c2e2c4f9714037340ccb08326b3e8c"
+    },
+    "registries": [
+        {
+            "kind": "git",
+            "repository": "https://gitlab.com/colorglass/vcpkg-colorglass",
+            "baseline": "6309841a1ce770409708a67a9ba5c26c537d2937",
+            "packages": [
+                "commonlibsse-ng"
+            ]
+        }
+    ]
 }

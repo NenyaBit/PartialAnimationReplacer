@@ -36,7 +36,7 @@ jobs:
 
     - name: Move binaries
       run: |
-        cd ${{github.workspace}}/build/ALL
+        cd ${{github.workspace}}/build/
         mkdir temp
         cd temp
         move ../PartialAnimationReplacer.dll
@@ -48,7 +48,7 @@ jobs:
         # Artifact name
         name: ${{ env.PROJECT_NAME }}-DLL
         # A file, directory or wildcard pattern that describes what to upload
-        path: build/ALL/temp
+        path: build/temp
         # The desired behavior if no files are found using the provided path.
         retention-days: 90
         

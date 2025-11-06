@@ -18,23 +18,50 @@ void ReplacerManager::EvaluateReplacers()
 	});
 
 	for (const auto& actor : actors) {
-		if (const auto replacer = FindReplacer(actor)) {
-			replacers->insert({ actor->GetFormID(), replacer });
-		}
+		FindReplacersForActor(actor, *replacers);
 	}
 	
 	replacers = _current.exchange(replacers);
 }
 
-std::shared_ptr<Replacer> ReplacerManager::FindReplacer(RE::Actor* a_actor)
+// Helper function to test for common bones
+// The point is: no std::string copy, linear time
+bool HaveCommonElements(
+    const BoneSet& set1,
+    const BoneSet& set2)
 {
-	for (auto& replacer : _replacers) {
+    auto it1 = set1.begin();
+    auto it2 = set2.begin();
+	// take advantage of std::sets being sorted structures
+    while (it1 != set1.end() && it2 != set2.end()) {
+        const std::string& s1 = it1->get();
+        const std::string& s2 = it2->get();
+        if (s1 == s2)
+            return true;
+        if (s1 < s2)
+            ++it1;
+        else
+            ++it2;
+    }
+    return false;
+}
+
+// Evaluates conditions on actor `a_actor` and inserts applicable replacers in `a_map`
+void ReplacerManager::FindReplacersForActor(RE::Actor* a_actor, ReplacerMap& a_map)
+{
+	// logger::info("FindReplacersForActor on actor {:x} ({} candidates)", a_actor->formID, _replacers.size());
+	BoneSet replaced_bones;
+	// replacers are already sorted by decreasing priority
+	for (const auto& replacer : _replacers) {
 		if (replacer->Eval(a_actor)) {
-			return replacer;
+			// test for no shared bones
+			const BoneSet& incoming_bones = replacer->GetBoneset();
+			if (not HaveCommonElements(replaced_bones, incoming_bones)) {
+				a_map[a_actor->GetFormID()].push_back(replacer);
+				replaced_bones.insert(incoming_bones.begin(), incoming_bones.end());
+			}
 		}
 	}
-
-	return nullptr;
 }
 
 void ReplacerManager::ApplyReplacers(RE::NiAVObject* a_playerObj)
@@ -45,7 +72,7 @@ void ReplacerManager::ApplyReplacers(RE::NiAVObject* a_playerObj)
 	const auto replacers = _current.load();
 
 	// apply to player
-	ApplyReplacer(replacers, 0x14, a_playerObj);
+	ApplyReplacersToActor(replacers, 0x14, a_playerObj);
 
 	RE::NiUpdateData updateData{
 		0.f,
@@ -55,7 +82,7 @@ void ReplacerManager::ApplyReplacers(RE::NiAVObject* a_playerObj)
 	// apply to NPCs
 	RE::ProcessLists::GetSingleton()->ForEachHighActor([&replacers, &updateData](RE::Actor* a_actor) {
 		if (const auto obj = a_actor->Get3D(false)) {
-			if (ApplyReplacer(replacers, a_actor->GetFormID(), obj)) {
+			if (ApplyReplacersToActor(replacers, a_actor->GetFormID(), obj)) {
 				obj->Update(updateData);
 			}
 		}
@@ -64,11 +91,14 @@ void ReplacerManager::ApplyReplacers(RE::NiAVObject* a_playerObj)
 	});
 }
 
-bool ReplacerManager::ApplyReplacer(const std::shared_ptr<ReplacerMap>& a_map, RE::FormID a_id, RE::NiAVObject* a_obj)
+bool ReplacerManager::ApplyReplacersToActor(const std::shared_ptr<ReplacerMap>& a_map, RE::FormID a_id, RE::NiAVObject* a_obj)
 {
 	const auto iter = a_map->find(a_id);
 	if (iter != a_map->end()) {
-		iter->second->Apply(a_obj);
+		const auto& actorReplacers = iter->second;
+		for (const auto& repl : actorReplacers) {
+			repl->Apply(a_obj);
+		}
 		return true;
 	}
 

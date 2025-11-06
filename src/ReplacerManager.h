@@ -4,7 +4,7 @@
 
 namespace PAR
 {
-	typedef std::unordered_map<RE::FormID, std::shared_ptr<Replacer>> ReplacerMap;
+	typedef std::unordered_map<RE::FormID, std::vector<std::shared_ptr<Replacer>>> ReplacerMap;
 	
 	class ReplacerManager
 	{
@@ -21,8 +21,8 @@ namespace PAR
 		static void LoadDir(const fs::directory_entry& a_dir);
 		static bool LoadFile(const fs::directory_entry& a_file);
 
-		static std::shared_ptr<Replacer> FindReplacer(RE::Actor* a_actor);
-		static bool ApplyReplacer(const std::shared_ptr<ReplacerMap>& a_map, RE::FormID a_id, RE::NiAVObject* a_obj);
+		static void FindReplacersForActor(RE::Actor* a_actor, ReplacerMap& map);
+		static bool ApplyReplacersToActor(const std::shared_ptr<ReplacerMap>& a_map, RE::FormID a_id, RE::NiAVObject* a_obj);
 
 		static void Sort();
 
